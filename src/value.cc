@@ -350,7 +350,6 @@ const str_utf8_wrapper& Value::toStrUtf8Wrapper() const {
 class tostring_visitor : public boost::static_visitor<std::string>
 {
 public:
-	typedef std::string result_type;
   template <typename T> std::string operator()(const T &op1) const {
     assert(false && "unhandled tostring_visitor type");
     return boost::lexical_cast<std::string>(op1);	
@@ -496,7 +495,6 @@ std::string Value::toEchoString(const tostring_visitor *visitor) const
 class chr_visitor : public boost::static_visitor<std::string>
 {
 public:
-	typedef std::string result_type;
 	template <typename S> std::string operator()(const S &) const
 		{
 			return "";
@@ -651,7 +649,6 @@ const FunctionType& Value::toFunction() const
 class equals_visitor : public boost::static_visitor<bool>
 {
 public:
-	typedef bool result_type;
   template <typename T, typename U> bool operator()(const T &, const U &) const {
     return false;
   }
@@ -683,7 +680,6 @@ bool Value::operator!=(const Value &v) const
 	class name : public boost::static_visitor<bool>												\
 	{																																			\
 	public:																																\
-		typedef bool result_type;																						\
 		template <typename T, typename U> bool operator()(const T &, const U &) const {	\
 			return false;																											\
 		}																																		\
@@ -729,7 +725,6 @@ bool Value::operator<=(const Value &v) const
 class plus_visitor : public boost::static_visitor<Value>
 {
 public:
-	typedef Value result_type;
 	template <typename T, typename U>
   Value operator()(const T &, const U &) const {
 		return Value();
@@ -756,7 +751,6 @@ Value Value::operator+(const Value &v) const
 class minus_visitor : public boost::static_visitor<Value>
 {
 public:
-	typedef Value result_type;
 	template <typename T, typename U> Value operator()(const T &, const U &) const {
 		return Value();
 	}
@@ -947,7 +941,6 @@ Value Value::operator-() const
 class bracket_visitor : public boost::static_visitor<Value>
 {
 public:
-	typedef Value result_type;
   Value operator()(const str_utf8_wrapper &str, const double &idx) const {
 
     const auto i = convert_to_uint32(idx);
