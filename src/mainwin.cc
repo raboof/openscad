@@ -1634,20 +1634,10 @@ bool MainWindow::eventFilter(QObject* obj, QEvent *event)
 void MainWindow::updateTemporalVariables()
 {
 	this->top_ctx->set_variable("$t", Value(this->anim_tval));
-
 	auto camVpt = qglview->cam.getVpt();
-	Value::VectorPtr vpt;
-	vpt->emplace_back(camVpt.x());
-	vpt->emplace_back(camVpt.y());
-	vpt->emplace_back(camVpt.z());
-	this->top_ctx->set_variable("$vpt", std::move(vpt));
-
+	this->top_ctx->set_variable("$vpt", Value(VectorType(camVpt.x(), camVpt.y(), camVpt.z())));
 	auto camVpr = qglview->cam.getVpr();
-	Value::VectorPtr vpr;
-	vpr->emplace_back(camVpr.x());
-	vpr->emplace_back(camVpr.y());
-	vpr->emplace_back(camVpr.z());
-	top_ctx->set_variable("$vpr", std::move(vpr));
+	top_ctx->set_variable("$vpr", Value(VectorType(camVpr.x(), camVpr.y(), camVpr.z())));
 	top_ctx->set_variable("$vpd", Value(qglview->cam.zoomValue()));
 }
 
@@ -1675,7 +1665,7 @@ void MainWindow::updateCamera(const std::shared_ptr<FileContext> ctx)
 	}
 
 	const auto &vpd = ctx->lookup_variable("$vpd");
-	if (vpd.type() == Value::ValueType::NUMBER){
+	if (vpd.type() == Value::Type::NUMBER){
 		qglview->cam.setVpd(vpd.toDouble());
 	}else{
 		PRINTB("UI-WARNING: Unable to convert $vpd=%s to a number", vpd.toEchoString());

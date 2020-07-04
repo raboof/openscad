@@ -60,7 +60,8 @@ public: // methods
 
 	static const std::shared_ptr<EvalContext> getLastModuleCtx(const std::shared_ptr<EvalContext> evalctx);
 
-	static AbstractNode* getChild(const Value &value, const std::shared_ptr<EvalContext> modulectx);
+	static AbstractNode* getChild(const Value &value, const std::shared_ptr<EvalContext>& modulectx);
+	static AbstractNode* getChild(int n, const std::shared_ptr<EvalContext>& modulectx);
 
 private: // data
 	Type type;
@@ -74,31 +75,31 @@ void ControlModule::for_eval(AbstractNode &node, const ModuleInstantiation &inst
 		const std::string &it_name = evalctx->getArgName(l);
 		Value it_values = evalctx->getArgValue(l, ctx);
 		ContextHandle<Context> c{Context::create<Context>(ctx)};
-		if (it_values.type() == Value::ValueType::RANGE) {
+		if (it_values.type() == Value::Type::RANGE) {
 			const RangeType& range = it_values.toRange();
 			uint32_t steps = range.numValues();
 			if (steps >= RangeType::MAX_RANGE_STEPS) {
 				PRINTB("WARNING: Bad range parameter in for statement: too many elements (%lu), %s", steps % inst.location().toRelativeString(ctx->documentPath()));
 			} else {
-				for (RangeType::iterator it = range.begin();it != range.end();it++) {
-					c->set_variable(it_name, Value(*it));
+				for (auto d : range) {
+					c->set_variable(it_name, Value(d));
 					for_eval(node, inst, l+1, c.ctx, evalctx);
 				}
 			}
 		}
-		else if (it_values.type() == Value::ValueType::VECTOR) {
+		else if (it_values.type() == Value::Type::VECTOR) {
 			for (const auto &el : it_values.toVector()) {
 				c->set_variable(it_name, el.clone());
 				for_eval(node, inst, l+1, c.ctx, evalctx);
 			}
 		}
-		else if (it_values.type() == Value::ValueType::STRING) {
-			utf8_split(it_values.toStrUtf8Wrapper(), [&](Value v) {
-				c->set_variable(it_name, std::move(v));
+		else if (it_values.type() == Value::Type::STRING) {
+			for(auto ch : it_values.toStrUtf8Wrapper()) {
+				c->set_variable(it_name, Value(std::move(ch)));
 				for_eval(node, inst, l+1, c.ctx, evalctx);
-			});
+			}
 		}
-		else if (it_values.type() != Value::ValueType::UNDEFINED) {
+		else if (it_values.type() != Value::Type::UNDEFINED) {
 			c->set_variable(it_name, std::move(it_values));
 			for_eval(node, inst, l+1, c.ctx, evalctx);
 		}
@@ -136,9 +137,9 @@ const std::shared_ptr<EvalContext> ControlModule::getLastModuleCtx(const std::sh
 }
 
 // static
-AbstractNode* ControlModule::getChild(const Value &value, const std::shared_ptr<EvalContext> modulectx)
+AbstractNode* ControlModule::getChild(const Value &value, const std::shared_ptr<EvalContext>& modulectx)
 {
-	if (value.type()!=Value::ValueType::NUMBER) {
+	if (value.type()!=Value::Type::NUMBER) {
 		// Invalid parameter
 		// (e.g. first child of difference is invalid)
 		PRINTB("WARNING: Bad parameter type (%s) for children, only accept: empty, number, vector, range.", value.toString());
@@ -149,8 +150,11 @@ AbstractNode* ControlModule::getChild(const Value &value, const std::shared_ptr<
 		PRINTB("WARNING: Bad parameter type (%s) for children, only accept: empty, number, vector, range.", value.toString());
 		return nullptr;
 	}
+	return getChild(static_cast<int>(trunc(v)), modulectx);
+}
 
-	int n = static_cast<int>(trunc(v));
+AbstractNode* ControlModule::getChild(int n, const std::shared_ptr<EvalContext>& modulectx)
+{
 	if (n < 0) {
 		PRINTB("WARNING: Negative children index (%d) not allowed", n);
 		return nullptr; // Disallow negative child indices
@@ -165,6 +169,8 @@ AbstractNode* ControlModule::getChild(const Value &value, const std::shared_ptr<
 	// OK
 	return modulectx->getChild(n)->evaluate(modulectx);
 }
+
+
 
 AbstractNode *ControlModule::instantiate(const std::shared_ptr<Context>& ctx, const ModuleInstantiation *inst, const std::shared_ptr<EvalContext>& evalctx) const
 {
@@ -228,22 +234,21 @@ AbstractNode *ControlModule::instantiate(const std::shared_ptr<Context>& ctx, co
 		else if (evalctx->numArgs()>0) {
 			// one (or more ignored) parameter
 			Value value = evalctx->getArgValue(0);
-			if (value.type() == Value::ValueType::NUMBER) {
+			if (value.type() == Value::Type::NUMBER) {
 				return getChild(std::move(value), modulectx);
 			}
-			else if (value.type() == Value::ValueType::VECTOR) {
+			else if (value.type() == Value::Type::VECTOR) {
 				AbstractNode* node;
 				if (Feature::ExperimentalLazyUnion.is_enabled()) node = new ListNode(inst, evalctx);
 				else node = new GroupNode(inst, evalctx);
-				const auto &vect = value.toVector();
-				for(auto it = vect.begin(); it != vect.end(); it++) {
-					AbstractNode* childnode = getChild(std::move(*it), modulectx);
+				for(const auto& val : value.toVector()) {
+					AbstractNode* childnode = getChild(val, modulectx);
 					if (childnode==nullptr) continue; // error
 					node->children.push_back(childnode);
 				}
 				return node;
 			}
-			else if (value.type() == Value::ValueType::RANGE) {
+			else if (value.type() == Value::Type::RANGE) {
 				const RangeType &range = value.toRange();
 				uint32_t steps = range.numValues();
 				if (steps >= RangeType::MAX_RANGE_STEPS) {
@@ -253,8 +258,8 @@ AbstractNode *ControlModule::instantiate(const std::shared_ptr<Context>& ctx, co
 				AbstractNode* node;
 				if (Feature::ExperimentalLazyUnion.is_enabled()) node = new ListNode(inst, evalctx);
 				else node = new GroupNode(inst, evalctx);
-				for (RangeType::iterator it = range.begin();it != range.end();it++) {
-					AbstractNode* childnode = getChild(Value(*it),modulectx); // with error cases
+				for (auto d : range) {
+					AbstractNode* childnode = getChild(static_cast<int>(trunc(d)), modulectx); // with error cases
 					if (childnode==nullptr) continue; // error
 					node->children.push_back(childnode);
 				}

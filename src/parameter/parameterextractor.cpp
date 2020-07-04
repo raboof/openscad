@@ -37,9 +37,9 @@ void ParameterExtractor::setParameters(const FileModule* module,entry_map_t& ent
     if (!param) continue;
 
     Value defaultValue = assignment->expr->evaluate(ctx.ctx);
-    if (defaultValue.type() == Value::ValueType::UNDEFINED) continue;
+    if (defaultValue.type() == Value::Type::UNDEFINED) continue;
 
-    ParameterObject *entryObject = new ParameterObject(ctx.ctx, assignment, std::move(defaultValue));
+    ParameterObject *entryObject = new ParameterObject(ctx.ctx, assignment, defaultValue);
 
     //check whether object exist or not previously
     if (entries.find(assignment->name) == entries.end()) {

@@ -148,7 +148,8 @@ std::string ModuleContext::dump(const AbstractModule *mod, const ModuleInstantia
 		if (m) {
 			s << "  module args:";
 			for(const auto &arg : m->definition_arguments) {
-				s << boost::format("    %s = %s") % arg->name % variables[arg->name];
+				auto result = variables.find(arg->name);
+				s << boost::format("    %s = %s") % arg->name % (result == variables.end() ? Value::undefined : result->second);
 			}
 		}
 	}

@@ -8,6 +8,7 @@
 #include "value.h"
 #include "Assignment.h"
 #include "memory.h"
+#include "valuemap.h"
 
 /**
  * Local handle to a all context objects. This is used to maintain the
@@ -73,7 +74,7 @@ public:
 	void apply_variables(const std::shared_ptr<Context> other);
 	void apply_config_variables(const std::shared_ptr<Context> other);
 
-	const Value& lookup_variable(const std::string &name, bool silent = false, const Location &loc=Location::NONE) const;
+	Value lookup_variable(const std::string &name, bool silent = false, const Location &loc=Location::NONE) const;
 	double lookup_variable_with_default(const std::string &variable, const double &def, const Location &loc=Location::NONE) const;
 	std::string lookup_variable_with_default(const std::string &variable, const std::string &def, const Location &loc=Location::NONE) const;
 
@@ -88,8 +89,6 @@ public:
 protected:
 	const std::shared_ptr<Context> parent;
 	Stack *ctx_stack;
-
-	typedef std::unordered_map<std::string, Value> ValueMap;
 	ValueMap constants;
 	ValueMap variables;
 	ValueMap config_variables;

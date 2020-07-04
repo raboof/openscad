@@ -339,7 +339,7 @@ expr
               } else {
                 PRINTB("WARNING: Support for function literals is disabled %s",
                 LOCD("literal", @$).toRelativeString(mainFilePath.parent_path().generic_string()));
-                $$ = new Literal(Value(), LOCD("literal", @$));
+                $$ = new Literal(Value::undef(), LOCD("literal", @$));
               }
               delete $3;
             }
@@ -494,7 +494,7 @@ primary
             }
         | TOK_UNDEF
             {
-              $$ = new Literal(Value(), LOCD("literal", @$));
+              $$ = new Literal(Value::undef(), LOCD("literal", @$));
             }
         | TOK_NUMBER
             {
@@ -524,7 +524,7 @@ primary
             }
         | '[' optional_commas ']'
             {
-              $$ = new Literal(Value{Value::VectorPtr()}, LOCD("vector", @$));
+              $$ = new Literal(VectorType::EmptyVector(), LOCD("vector", @$));
             }
         | '[' vector_expr optional_commas ']'
             {

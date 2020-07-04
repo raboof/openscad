@@ -21,7 +21,7 @@ ParameterText::ParameterText(QWidget *parent, ParameterObject *parameterobject, 
 void ParameterText::onChanged(QString)
 {
 	if(!this->suppressUpdate){
-		if (object->dvt == Value::ValueType::STRING) {
+		if (object->dvt == Value::Type::STRING) {
 			object->value = Value(lineEdit->text().toStdString());
 		}else{
 			ContextHandle<Context> ctx{Context::create<Context>()};

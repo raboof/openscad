@@ -86,7 +86,7 @@ void Context::setVariables(const std::shared_ptr<EvalContext> evalctx, const Ass
 {
 	// Set any default values
 	for (const auto &arg : args) {
-		set_variable(arg->name, arg->expr ? arg->expr->evaluate(this->parent) : Value());
+		set_variable(arg->name, arg->expr ? arg->expr->evaluate(this->parent) : Value::undef());
 	}
 	
 	if (evalctx) {
@@ -100,26 +100,26 @@ void Context::setVariables(const std::shared_ptr<EvalContext> evalctx, const Ass
 // sink for value takes &&
 void Context::set_variable(const std::string &name, Value&& value)
 {
-	if (is_config_variable(name)) this->config_variables[name] = std::move(value);
-	else this->variables[name] = std::move(value);
+	if (is_config_variable(name)) {
+		this->config_variables.insert_or_assign(name, std::move(value));
+	} else {
+		this->variables.insert_or_assign(name, std::move(value));
+	}
 }
 
 // sink for value takes &&
 void Context::set_constant(const std::string &name, Value&& value)
 {
-	if (this->constants.find(name) != this->constants.end()) {
+	if (this->constants.contains(name)) {
 		PRINTB("WARNING: Attempt to modify constant '%s'.", name);
-	}
-	else {
-		this->constants[name] = std::move(value);
+	}	else {
+  	this->constants.emplace(name, std::move(value));
 	}
 }
 
 void Context::apply_variables(const std::shared_ptr<Context> other)
 {
-	for (const auto &var : other->variables) {
-		set_variable(var.first, var.second.clone());
-	}
+	this->variables.applyFrom(other->variables);
 }
 
 /*!
@@ -135,41 +135,35 @@ void Context::apply_config_variables(const std::shared_ptr<Context> other)
 		// Assign parent's variables first, since they might be overridden by a child
 		apply_config_variables(other->parent);
 	}
-	for (const auto &var : other->config_variables) {
-		set_variable(var.first, var.second.clone());
-	}
+	this->config_variables.applyFrom(other->config_variables);
 }
 
-void Context::take_variables(const std::shared_ptr<Context> other)
-{
-	for (auto &var : other->variables) {
-		set_variable(var.first, std::move(var.second));
-	}
-}
-
-const Value& Context::lookup_variable(const std::string &name, bool silent, const Location &loc) const
+Value Context::lookup_variable(const std::string &name, bool silent, const Location &loc) const
 {
 	if (!this->ctx_stack) {
 		PRINT("ERROR: Context had null stack in lookup_variable()!!");
-		return Value::undefined;
+		return Value::undef();
 	}
+	ValueMap::const_iterator result;
 	if (is_config_variable(name)) {
 		for (int i = this->ctx_stack->size()-1; i >= 0; i--) {
 			const auto &confvars = ctx_stack->at(i)->config_variables;
-			if (confvars.find(name) != confvars.end()) {
-				return confvars.find(name)->second;
+			if ((result = confvars.find(name)) != confvars.end()) {
+				return result->second.clone();
 			}
 		}
 		if (!silent) {
 			PRINTB("WARNING: Ignoring unknown variable '%s', %s.", name % loc.toRelativeString(this->documentPath()));
 		}
-		return Value::undefined;
+		return Value::undef();
 	}
-	if (!this->parent && this->constants.find(name) != this->constants.end()) {
-		return this->constants.find(name)->second;
+	if (!this->parent) {
+			if ((result = this->constants.find(name)) != this->constants.end()) {
+				return result->second.clone();
+			}
 	}
-	if (this->variables.find(name) != this->variables.end()) {
-		return this->variables.find(name)->second;
+	if ((result = this->variables.find(name)) != this->variables.end()) {
+		return result->second.clone();
 	}
 	if (this->parent) {
 		return this->parent->lookup_variable(name, silent, loc);
@@ -177,20 +171,20 @@ const Value& Context::lookup_variable(const std::string &name, bool silent, cons
 	if (!silent) {
 		PRINTB("WARNING: Ignoring unknown variable '%s', %s.", name % loc.toRelativeString(this->documentPath()));
 	}
-	return Value::undefined;
+	return Value::undef();
 }
 
 
 double Context::lookup_variable_with_default(const std::string &variable, const double &def, const Location &loc) const
 {
 	const Value& v = this->lookup_variable(variable, true, loc);
-	return (v.type() == Value::ValueType::NUMBER) ? v.toDouble() : def;
+	return (v.type() == Value::Type::NUMBER) ? v.toDouble() : def;
 }
 
 std::string Context::lookup_variable_with_default(const std::string &variable, const std::string &def, const Location &loc) const
 {
 	const Value& v = this->lookup_variable(variable, true, loc);
-	return (v.type() == Value::ValueType::STRING) ? v.toString() : def;
+	return (v.type() == Value::Type::STRING) ? v.toString() : def;
 }
 
 bool Context::has_local_variable(const std::string &name) const
@@ -225,7 +219,7 @@ Value Context::evaluate_function(const std::string &name, const std::shared_ptr<
 {
 	if (this->parent) return this->parent->evaluate_function(name, evalctx);
 	print_ignore_warning("function", name.c_str(),evalctx->loc,this->documentPath().c_str());
-	return Value();
+	return Value::undef();
 }
 
 AbstractNode *Context::instantiate_module(const ModuleInstantiation &inst, const std::shared_ptr<EvalContext>& evalctx) const
@@ -264,7 +258,7 @@ std::string Context::dump(const AbstractModule *mod, const ModuleInstantiation *
 		if (m) {
 			s << "  module args:";
 			for(const auto &arg : m->definition_arguments) {
-				s << boost::format("    %s = %s\n") % arg->name % variables[arg->name];
+				s << boost::format("    %s = %s\n") % arg->name % variables.get(arg->name);
 			}
 		}
 	}

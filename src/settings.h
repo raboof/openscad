@@ -21,12 +21,12 @@ public:
     const std::string & category() const;
     const std::string & name() const;
 
-    virtual Value defaultValue() const;
-    virtual Value range() const;
+    virtual const Value& defaultValue() const;
+    virtual const Value& range() const;
     virtual bool is_default() const;
 
 protected:
-    SettingsEntry(const std::string category, const std::string name, const Value range, const Value def);
+    SettingsEntry(const std::string category, const std::string name, const Value &range, const Value &def);
     virtual ~SettingsEntry();
 
     friend class Settings;
@@ -132,8 +132,8 @@ public:
     void visit(class SettingsVisitor& visitor);
     SettingsEntry* getSettingEntryByName(const std::string &name);
 
-    Value defaultValue(const SettingsEntry& entry) const;
-    Value get(const SettingsEntry& entry) const;
+    const Value& defaultValue(const SettingsEntry& entry) const;
+    const Value& get(const SettingsEntry& entry) const;
     void set(SettingsEntry& entry, Value val);
 
 private:

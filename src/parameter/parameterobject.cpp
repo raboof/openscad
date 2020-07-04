@@ -4,25 +4,26 @@
 #include "modcontext.h"
 #include "annotation.h"
 
-ParameterObject::ParameterObject(std::shared_ptr<Context> ctx, const shared_ptr<Assignment> &assignment, const Value defaultValue)
+ParameterObject::ParameterObject(std::shared_ptr<Context> ctx, const shared_ptr<Assignment> &assignment, const Value &defaultValue) :
+    value(Value::undef()), values(Value::undef()), defaultValue(Value::undef())
 {
   this->set = false;
   this->name = assignment->name;
   const Annotation *param = assignment->annotation("Parameter");
-  setValue(defaultValue.clone(), param->evaluate(ctx));
+  setValue(defaultValue, param->evaluate(ctx));
   const Annotation *desc = assignment->annotation("Description");
 
   if (desc) {
-    const Value v = desc->evaluate(ctx);
-    if (v.type() == Value::ValueType::STRING) {
+    Value v = desc->evaluate(ctx);
+    if (v.type() == Value::Type::STRING) {
       description=QString::fromStdString(v.toString());
     }
   }
   
   const Annotation *group = assignment->annotation("Group");
   if (group) {
-    const Value v = group->evaluate(ctx);
-    if (v.type() == Value::ValueType::STRING) {
+    Value v = group->evaluate(ctx);
+    if (v.type() == Value::Type::STRING) {
       groupName=v.toString();
     }
   } else {
@@ -40,7 +41,7 @@ void ParameterObject::applyParameter(const shared_ptr<Assignment> &assignment)
   }
 }
 
-void ParameterObject::setValue(const class Value defaultValue, const class Value values)
+void ParameterObject::setValue(const Value &defaultValue, const Value &values)
 {
   this->values = values.clone();
   this->value = defaultValue.clone();
@@ -48,19 +49,19 @@ void ParameterObject::setValue(const class Value defaultValue, const class Value
   this->vt = values.type();
   this->dvt = defaultValue.type();
  
-  bool makerBotMax = (vt == Value::ValueType::VECTOR && values.toVector().size() == 1 && values.toVector()[0].type() == Value::ValueType::NUMBER); // [max] format from makerbot customizer
+  bool makerBotMax = (vt == Value::Type::VECTOR && values.toVector().size() == 1 && values.toVector()[0].type() == Value::Type::NUMBER); // [max] format from makerbot customizer
 
-  if (dvt == Value::ValueType::BOOL) {
+  if (dvt == Value::Type::BOOL) {
     this->target = CHECKBOX;
-  } else if ((dvt == Value::ValueType::VECTOR) && (defaultValue.toVector().size() <= 4)) {
+  } else if ((dvt == Value::Type::VECTOR) && (defaultValue.toVector().size() <= 4)) {
     this->target = checkVectorWidget();
-  } else if ((vt == Value::ValueType::RANGE || makerBotMax) && (dvt == Value::ValueType::NUMBER)) {
+  } else if ((vt == Value::Type::RANGE || makerBotMax) && (dvt == Value::Type::NUMBER)) {
     this->target = SLIDER;
-  } else if ((makerBotMax) && (dvt == Value::ValueType::STRING)){
+  } else if ((makerBotMax) && (dvt == Value::Type::STRING)){
     this->target = TEXT;
-  } else if ((vt == Value::ValueType::VECTOR) && ((dvt == Value::ValueType::NUMBER) || (dvt == Value::ValueType::STRING))) {
+  } else if ((vt == Value::Type::VECTOR) && ((dvt == Value::Type::NUMBER) || (dvt == Value::Type::STRING))) {
     this->target = COMBOBOX;
-  } else if (dvt == Value::ValueType::NUMBER) {
+  } else if (dvt == Value::Type::NUMBER) {
     this->target = NUMBER;
   } else {
     this->target = TEXT;
@@ -78,7 +79,7 @@ ParameterObject::parameter_type_t ParameterObject::checkVectorWidget()
   const auto &vec = defaultValue.toVector();
   if (vec.size() == 0) return TEXT;
   for (unsigned int i = 0;i < vec.size();i++) {
-    if (vec[i].type() != Value::ValueType::NUMBER) {
+    if (vec[i].type() != Value::Type::NUMBER) {
       return TEXT;
     }
   }

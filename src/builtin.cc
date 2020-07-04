@@ -108,11 +108,10 @@ Builtins::Builtins()
 	this->assignments.emplace_back(new Assignment("$fs", make_shared<Literal>(Value(2.0))) );
 	this->assignments.emplace_back(new Assignment("$fa", make_shared<Literal>(Value(12.0))) );
 	this->assignments.emplace_back(new Assignment("$t", make_shared<Literal>(Value(0.0))) );
-	this->assignments.emplace_back(new Assignment("$preview", make_shared<Literal>(Value())) ); //undef as should always be overwritten.
-
-	this->assignments.emplace_back(new Assignment("$vpt", make_shared<Literal>( Value::VectorPtr(0.0,0.0,0.0) )));
-	this->assignments.emplace_back(new Assignment("$vpr", make_shared<Literal>( Value::VectorPtr(0.0,0.0,0.0) )));
-	this->assignments.emplace_back(new Assignment("$vpd", make_shared<Literal>(Value(500))) );
+	this->assignments.emplace_back(new Assignment("$preview", make_shared<Literal>(Value::undef())) ); //undef as should always be overwritten.
+	this->assignments.emplace_back(new Assignment("$vpt", make_shared<Literal>(Value(VectorType(0.0, 0.0, 0.0)))));
+	this->assignments.emplace_back(new Assignment("$vpr", make_shared<Literal>(Value(VectorType(0.0, 0.0, 0.0)))));
+	this->assignments.emplace_back(new Assignment("$vpd", make_shared<Literal>(Value(500.0))) );
 }
 
 void Builtins::initKeywordList()

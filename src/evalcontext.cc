@@ -26,7 +26,7 @@ Value EvalContext::getArgValue(size_t i, const std::shared_ptr<Context> ctx) con
 	if (arg->expr) {
 		return arg->expr->evaluate(ctx ? ctx : (const_cast<EvalContext *>(this))->get_shared_ptr());
 	}
-	return Value();
+	return Value::undef();
 }
 
 /*!
@@ -84,7 +84,7 @@ shared_ptr<ModuleInstantiation> EvalContext::getChild(size_t i) const
 void EvalContext::assignTo(std::shared_ptr<Context> target) const
 {
 	for (const auto &assignment : this->eval_arguments) {
-		auto v = assignment->expr ? assignment->expr->evaluate(target) : Value{};
+		auto v = assignment->expr ? assignment->expr->evaluate(target) : Value::undef();
 		
 		if(assignment->name.empty()){
 			PRINTB("WARNING: Assignment without variable name %s, %s", v.toEchoString() % this->loc.toRelativeString(target->documentPath()));
@@ -132,7 +132,8 @@ std::string EvalContext::dump(const AbstractModule *mod, const ModuleInstantiati
 		if (m) {
 			s << boost::format("  module args:");
 			for(const auto &arg : m->definition_arguments) {
-				s << boost::format("    %s = %s") % arg->name % variables[arg->name];
+				auto result = variables.find(arg->name);
+				s << boost::format("    %s = %s") % arg->name % (result == variables.end() ? Value::undefined : result->second);
 			}
 		}
 	}
