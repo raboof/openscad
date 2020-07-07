@@ -23,6 +23,7 @@ endif()
 
 project(openscad)
 
+option(INFO "Display build configuration info at end of cmake config" ON)
 option(EXPERIMENTAL "Enable Experimental Features" OFF)
 option(SNAPSHOT "Create dev snapshot, uses nightly icons" OFF)
 option(HEADLESS "Build without GUI frontend" OFF)
@@ -62,6 +63,7 @@ file(MAKE_DIRECTORY ${AUTOGEN_BUILD_DIR})
 #endif()
 
 add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
+
 # Use same optimization as qmake build
 string(REPLACE "-O3" "-O2" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 
