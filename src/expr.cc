@@ -370,8 +370,10 @@ bool Vector::isLiteral() const {
 		}
 		literal_flag = true;
 		return true;
+	} else if (literal_flag) {
+		return true;
 	} else {
-		return literal_flag == true;
+		return false;
 	}
 }
 
