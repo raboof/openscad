@@ -191,17 +191,18 @@ private:
 public:
 	class iterator {
 	public:
+		// iterator_traits required types:
 		using iterator_category = std::forward_iterator_tag ;
 		using value_type        = str_utf8_wrapper;
 		using difference_type   = void;
-		using reference         = const str_utf8_wrapper&;
-		using pointer           = const str_utf8_wrapper*;
+		using reference         = value_type; // type used by operator*(), not actually a reference
+		using pointer           = void;
 		iterator() : ptr(&nullterm) {} // DefaultConstructible
 		iterator(const str_utf8_wrapper& str) : ptr(str.c_str()), len(char_len()) { }
 		iterator(const str_utf8_wrapper& str, bool /*end*/) : ptr(str.c_str() + str.size()) { }
 
 		iterator& operator++() { ptr += len; len = char_len(); return *this; }
-		value_type operator*() { return {ptr, len}; } // Note: returns a new str_utf8_wrapper **by value**, representing a single UTF8 character.
+		reference operator*() { return {ptr, len}; } // Note: returns a new str_utf8_wrapper **by value**, representing a single UTF8 character.
 		bool operator==(const iterator &other) const { return ptr == other.ptr; }
 		bool operator!=(const iterator &other) const { return ptr != other.ptr; }
 	private:
