@@ -110,7 +110,7 @@ void ParameterSet::applyParameterSet(FileModule *fileModule, const std::string &
 				if (v.first == assignment->name) {
 					const Value defaultValue = assignment->expr->evaluate(ctx.ctx);
 					if (defaultValue.type() == Value::Type::STRING) {
-						assignment->expr = shared_ptr<Expression>(new Literal(Value{v.second.data()}));
+						assignment->expr = shared_ptr<Expression>(new Literal(v.second.data()));
 					}
 					else if (defaultValue.type() == Value::Type::BOOL) {
 						assignment->expr = shared_ptr<Expression>(new Literal(Value(v.second.get_value<bool>())));

@@ -153,7 +153,6 @@ std::string ModuleContext::dump(const AbstractModule *mod, const ModuleInstantia
 			}
 		}
 	}
-	typedef std::pair<std::string, Value> ValueMapType;
 	s << "  vars:";
 	for(const auto &v : constants) {
 		s << boost::format("    %s = %s") % v.first % v.second;

@@ -321,7 +321,7 @@ Value Range::evaluate(const std::shared_ptr<Context>& context) const
 					print_range_depr(loc, context);
 				}
 				
-				return Value{RangePtr{RangeType{begin_val, end_val}}};
+				return RangeType(begin_val, end_val);
 			} else {
 				Value stepValue = this->step->evaluate(context);
 				if (stepValue.type() == Value::Type::NUMBER) {
@@ -334,7 +334,7 @@ Value Range::evaluate(const std::shared_ptr<Context>& context) const
 						}
 					}
 
-					return Value{RangePtr{RangeType{begin_val, step_val, end_val}}};
+					return RangeType(begin_val, step_val, end_val);
 				}
 			}
 		}
@@ -461,7 +461,7 @@ FunctionDefinition::FunctionDefinition(Expression *expr, const AssignmentList &d
 
 Value FunctionDefinition::evaluate(const std::shared_ptr<Context>& context) const
 {
-	return Value{FunctionPtr{FunctionType{context, expr, std::unique_ptr<AssignmentList>{new AssignmentList{definition_arguments}}}}};
+	return FunctionPtr{FunctionType{context, expr, std::unique_ptr<AssignmentList>{new AssignmentList{definition_arguments}}}};
 }
 
 void FunctionDefinition::print(std::ostream &stream, const std::string &indent) const
@@ -706,7 +706,7 @@ Value LcIf::evaluate(const std::shared_ptr<Context>& context) const
 	if (expr) {
 		return expr->evaluate(context);
 	} else {
-		return EmbeddedVectorType::EmptyVector(); // empty embedded vector
+		return EmbeddedVectorType::Empty();
 	}
 }
 
@@ -752,7 +752,7 @@ Value LcEach::evalRecur(Value &&v, const std::shared_ptr<Context>& context) cons
 	} else if (v.type() != Value::Type::UNDEFINED) {
 		return std::move(v);
 	}
-	return EmbeddedVectorType::EmptyVector();
+	return EmbeddedVectorType::Empty();
 }
 
 Value LcEach::evaluate(const std::shared_ptr<Context>& context) const
@@ -812,7 +812,7 @@ Value LcFor::evaluate(const std::shared_ptr<Context>& context) const
 		return this->expr->evaluate(c.ctx);
 	}
 
-	return EmbeddedVectorType::EmptyVector();
+	return EmbeddedVectorType::Empty();
 }
 
 void LcFor::print(std::ostream &stream, const std::string &) const

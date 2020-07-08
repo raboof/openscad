@@ -910,8 +910,7 @@ Value builtin_cross(const std::shared_ptr<Context> ctx, const std::shared_ptr<Ev
 	double y = v0[2].toDouble() * v1[0].toDouble() - v0[0].toDouble() * v1[2].toDouble();
 	double z = v0[0].toDouble() * v1[1].toDouble() - v0[1].toDouble() * v1[0].toDouble();
 	
-	auto ret = VectorType(x,y,z);
-	return Value(std::move(ret));
+	return VectorType(x,y,z);
 }
 
 Value builtin_is_undef(const std::shared_ptr<Context> ctx, const std::shared_ptr<EvalContext> evalctx)

@@ -54,7 +54,6 @@ using boost::algorithm::join;
 
 const Value Value::undefined;
 const VectorType VectorType::EMPTY;
-const EmbeddedVectorType EmbeddedVectorType::EMPTY;
 
 /* Define values for double-conversion library. */
 #define DC_BUFFER_SIZE 128
@@ -74,7 +73,6 @@ const EmbeddedVectorType EmbeddedVectorType::EMPTY;
 //private definitions used by trimTrailingZeroesHelper
 #define TRIM_TRAILINGZEROES_DONE 0
 #define TRIM_TRAILINGZEROES_CONTINUE 1
-
 
 //process parameter buffer from the end to start to find out where the zeroes are located (if any).
 //parameter pos shall be the pos in buffer where '\0' is located.
@@ -342,7 +340,7 @@ class tostring_visitor : public boost::static_visitor<std::string>
 public:
 	template <typename T> std::string operator()(const T &op1) const {
 		assert(false && "unhandled tostring_visitor type");
-		return boost::lexical_cast<std::string>(op1);	
+		return boost::lexical_cast<std::string>(op1);
 	}
 
 	std::string operator()(const str_utf8_wrapper &op1) const {
@@ -538,9 +536,7 @@ public:
 			}
 
 			std::ostringstream stream;
-			for (auto d : *v) {
-				stream << Value(d).chrString();
-			}
+			for (auto d : *v) stream << Value(d).chrString();
 			return stream.str();
 		}
 };
@@ -549,26 +545,6 @@ std::string Value::chrString() const
 {
 	return boost::apply_visitor(chr_visitor(), this->value);
 }
-
-
-bool VectorType::operator==(const VectorType &v) const
-{
-	return this->size()==v.size() && std::equal(this->begin(), this->end(), v.begin());
-}
-bool VectorType::operator< (const VectorType &v) const
-{
-	return std::lexicographical_compare(this->begin(), this->end(), v.begin(), v.end());
-}
-bool VectorType::operator> (const VectorType &v) const
-{
-	return std::lexicographical_compare(v.begin(), v.end(), this->begin(), this->end());
-}
-
-bool VectorType::operator!=(const VectorType &v) const {	return !operator==(v); }
-bool VectorType::operator<=(const VectorType &v) const { return !operator> (v); }
-bool VectorType::operator>=(const VectorType &v) const { return !operator< (v); }
-
-
 
 void VectorType::emplace_back(Value&& val)
 {
@@ -579,6 +555,7 @@ void VectorType::emplace_back(Value&& val)
 	}
 }
 
+// Specialized handler for EmbeddedVectorTypes
 void VectorType::emplace_back(EmbeddedVectorType&& mbed)
 {
 	if (mbed.size() > 1) {
@@ -591,7 +568,7 @@ void VectorType::emplace_back(EmbeddedVectorType&& mbed)
 		// Due to the above mentioned "-1" count, putting it in directaly as an EmbeddedVector
 		// would not change embed_excess, which is needed to check if flatten is required.
 		emplace_back(mbed.ptr->vec[0].clone());
-	} 
+	}
 	// else mbed.size() == 0, do nothing
 }
 
@@ -629,7 +606,7 @@ void VectorType::VectorObjectDeleter::operator()(VectorObject* v)
 		curr = std::move(purge.back()); // this should cause destruction of the *previous value* for curr
 		v = curr.get();
 		purge.pop_back();
-	} 
+	}
 	delete orig;
 }
 
@@ -737,26 +714,26 @@ bool Value::operator!=(const Value &v) const
 	return !(*this == v);
 }
 
-#define DEFINE_VISITOR(name,op)																					\
-	class name : public boost::static_visitor<bool>												\
-	{																																			\
-	public:																																\
-		template <typename T, typename U> bool operator()(const T &, const U &) const {	\
-			return false;																											\
-		}																																		\
-																																				\
-		template <typename T> bool operator()(const T &op1, const T &op2) const {	\
-			return op1 op op2;																								\
-		}																																		\
-																																				\
-		bool operator()(const bool &op1, const double &op2) const {					\
-			return op1 op op2;																								\
-		}																																		\
-																																				\
-		bool operator()(const double &op1, const bool &op2) const {					\
-			return op1 op op2;																								\
-		}																																		\
-	}
+#define DEFINE_VISITOR(name,op)                                                \
+  class name : public boost::static_visitor<bool>                              \
+  {                                                                            \
+  public:                                                                      \
+    template<typename T,typename U> bool operator()(const T&,const U&) const { \
+      return false;                                                            \
+    }                                                                          \
+                                                                               \
+    template<typename T> bool operator()(const T &op1, const T &op2) const {   \
+      return op1 op op2;                                                       \
+    }                                                                          \
+                                                                               \
+    bool operator()(const bool &op1, const double &op2) const {                \
+      return op1 op op2;                                                       \
+    }                                                                          \
+                                                                               \
+    bool operator()(const double &op1, const bool &op2) const {                \
+      return op1 op op2;                                                       \
+    }                                                                          \
+  }
 
 DEFINE_VISITOR(less_visitor, <);
 DEFINE_VISITOR(greater_visitor, >);
@@ -797,7 +774,7 @@ public:
 
 	Value operator()(const VectorType &op1, const VectorType &op2) const {
 		VectorType vec_sum;
-		// FIXME: should we really truncate to shortest vector here? 
+		// FIXME: should we really truncate to shortest vector here?
 		//   Maybe better to either "add zeroes" and return longest
 		//   and/or issue an warning/error about length mismatch.
 		// Also would be better to use the new VectorType iterators to avoid auto flattening on "random-access"
@@ -1030,9 +1007,9 @@ public:
 	Value operator()(const RangePtr &range, const double &idx) const {
 		const auto i = convert_to_uint32(idx);
 		switch(i) {
-			case 0: return Value(range->begin_val);
-			case 1: return Value(range->step_val);
-			case 2: return Value(range->end_val);
+			case 0: return range->begin_value();
+			case 1: return range->step_value();
+			case 2: return range->end_value();
 		}
 		return Value::undef();
 	}
@@ -1054,66 +1031,10 @@ Value Value::operator[](size_t idx) const
 	return boost::apply_visitor(bracket_visitor(), this->value, v.value);
 }
 
-// Iterators
-VectorType::iterator::iterator(const VectorType& v, bool get_end) noexcept : 	it(get_end ? v.ptr->vec.end() : v.ptr->vec.begin()), end(v.ptr->vec.end()) 
-{ 	
-	check_and_push(); 
-}
-
-VectorType::iterator& VectorType::iterator::operator++()
-{
-	// recursively increment and pop stack while at the end of EmbeddedVector(s)
-	while (++it == end && !it_stack.empty()) {
-		const auto& up = it_stack.back();
-		it = up.first;
-		end = up.second;
-		it_stack.pop_back();
-	}
-	check_and_push();
-	return *this;
-}
-
-// recursively push stack while current element is an EmbeddedVector
-inline void VectorType::iterator::check_and_push() 
-{
-	while (it != end && it->type() == Type::EMBEDDED_VECTOR) {
-		vec_t &cur = it->toEmbeddedVector().ptr->vec;
-		it_stack.emplace_back(it, end);
-		it = cur.begin();
-		end = cur.end();
-	}
-}
-
-
-str_utf8_wrapper::iterator::iterator(const str_utf8_wrapper& str, bool get_end) noexcept :
-	ptr(str.c_str() + (get_end ? str.size() : 0)), len(char_len()) { }
-
-str_utf8_wrapper::iterator& str_utf8_wrapper::iterator::operator++()
-{
-	ptr += len;
-	len = char_len();
-	return *this;
-}
-
-str_utf8_wrapper::iterator::value_type str_utf8_wrapper::iterator::operator*() {
-	return {ptr, len};
-}
-
-bool str_utf8_wrapper::iterator::operator==(const iterator &other) const
-{
-	return ptr == other.ptr;
-}
-
-bool str_utf8_wrapper::iterator::operator!=(const iterator &other) const
-{
-	return ptr != other.ptr;
-}
-
 size_t str_utf8_wrapper::iterator::char_len()
 {
 	return g_utf8_next_char(ptr) - ptr;
 }
-
 
 uint32_t RangeType::numValues() const
 {
@@ -1171,16 +1092,6 @@ void RangeType::iterator::update_type()
 	}
 }
 
-RangeType::iterator::reference RangeType::iterator::operator*()
-{
-	return val;
-}
-
-RangeType::iterator::pointer RangeType::iterator::operator->()
-{
-	return &(operator*());
-}
-
 RangeType::iterator& RangeType::iterator::operator++()
 {
 	val = range.begin_val + range.step_val * ++i_step;
@@ -1197,11 +1108,6 @@ bool RangeType::iterator::operator==(const iterator &other) const
 	}
 }
 
-bool RangeType::iterator::operator!=(const iterator &other) const
-{
-	return !operator==(other);
-}
-
 std::ostream& operator<<(std::ostream& stream, const RangeType& r)
 {
 	char buffer[DC_BUFFER_SIZE];
@@ -1209,13 +1115,14 @@ std::ostream& operator<<(std::ostream& stream, const RangeType& r)
 	double_conversion::DoubleToStringConverter dc(DC_FLAGS, DC_INF,
 			DC_NAN, DC_EXP, DC_DECIMAL_LOW_EXP, DC_DECIMAL_HIGH_EXP,
 			DC_MAX_LEADING_ZEROES, DC_MAX_TRAILING_ZEROES);
-	stream << "[" << DoubleConvert(r.begin_val, buffer, builder, dc) << " : "
-	              << DoubleConvert(r.step_val,  buffer, builder, dc) << " : "
-	              << DoubleConvert(r.end_val,   buffer, builder, dc) << "]";
-	return stream;
+	return stream << "["
+	  << DoubleConvert(r.begin_value(), buffer, builder, dc) << " : "
+	  << DoubleConvert(r.step_value(),  buffer, builder, dc) << " : "
+	  << DoubleConvert(r.end_value(),   buffer, builder, dc) << "]";
 }
 
-std::ostream& operator<<(std::ostream& stream, const FunctionType& f) {
+std::ostream& operator<<(std::ostream& stream, const FunctionType& f)
+{
 	stream << "function(";
 	bool first = true;
 	for (const auto& arg : f.getArgs()) {
