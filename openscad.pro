@@ -501,6 +501,7 @@ SOURCES += \
            src/export_amf.cc \
            src/export_3mf.cc \
            src/export_off.cc \
+           src/export_obj.cc \
            src/export_dxf.cc \
            src/export_svg.cc \
            src/export_nef.cc \

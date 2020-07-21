@@ -208,6 +208,7 @@ private slots:
 	void actionExport3MF();
 	void actionExportOFF();
 	void actionExportAMF();
+	void actionExportOBJ();
 	void actionExportDXF();
 	void actionExportSVG();
 	void actionExportCSG();

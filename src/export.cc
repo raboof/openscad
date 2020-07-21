@@ -57,6 +57,9 @@ void exportFile(const shared_ptr<const Geometry> &root_geom, std::ostream &outpu
 	case FileFormat::_3MF:
 		export_3mf(root_geom, output);
 		break;
+	case FileFormat::OBJ:
+		export_obj(root_geom, output);
+		break;
 	case FileFormat::DXF:
 		export_dxf(root_geom, output);
 		break;

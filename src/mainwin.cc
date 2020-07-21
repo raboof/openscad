@@ -351,6 +351,7 @@ MainWindow::MainWindow(const QStringList &filenames)
 	connect(this->fileActionExport3MF, SIGNAL(triggered()), this, SLOT(actionExport3MF()));
 	connect(this->fileActionExportOFF, SIGNAL(triggered()), this, SLOT(actionExportOFF()));
 	connect(this->fileActionExportAMF, SIGNAL(triggered()), this, SLOT(actionExportAMF()));
+	connect(this->fileActionExportOBJ, SIGNAL(triggered()), this, SLOT(actionExportOBJ()));
 	connect(this->fileActionExportDXF, SIGNAL(triggered()), this, SLOT(actionExportDXF()));
 	connect(this->fileActionExportSVG, SIGNAL(triggered()), this, SLOT(actionExportSVG()));
 	connect(this->fileActionExportCSG, SIGNAL(triggered()), this, SLOT(actionExportCSG()));
@@ -498,6 +499,7 @@ MainWindow::MainWindow(const QStringList &filenames)
 	initActionIcon(fileActionExportAMF, ":/images/AMF.png", ":/images/AMF-white.png");
 	initActionIcon(fileActionExport3MF, ":/images/3MF.png", ":/images/3MF-white.png");
 	initActionIcon(fileActionExportOFF, ":/images/OFF.png", ":/images/OFF-white.png");
+	initActionIcon(fileActionExportOBJ, ":/images/OBJ.png", ":/images/OBJ-white.png");
 	initActionIcon(fileActionExportDXF, ":/images/DXF.png", ":/images/DXF-white.png");
 	initActionIcon(fileActionExportSVG, ":/images/SVG.png", ":/images/SVG-white.png");
 	initActionIcon(fileActionExportCSG, ":/images/CSG.png", ":/images/CSG-white.png");
@@ -1925,6 +1927,8 @@ void MainWindow::sendToOctoPrint()
 		exportFileFormat = FileFormat::AMF;
 	} else if (fileFormat == "3MF") {
 		exportFileFormat = FileFormat::_3MF;
+	} else if (fileFormat == "OBJ") {
+		exportFileFormat = FileFormat::OBJ;
 	} else {
 		exportFileFormat = FileFormat::STL;
 	}
@@ -2101,7 +2105,7 @@ void MainWindow::actionRenderDone(shared_ptr<const Geometry> root_geom)
 #endif /* ENABLE_CGAL */
 
 /**
- * Call the mouseselection to determine the id of the clicked-on object.
+ * Call the mouseselection to determine the id of the clickd
  * Use the generated ID and try to find it within the list of products
  * And finally move the cursor to the beginning of the selected object in the editor
  */
@@ -2434,6 +2438,11 @@ void MainWindow::actionExportOFF()
 void MainWindow::actionExportAMF()
 {
 	actionExport(FileFormat::AMF, "AMF", ".amf", 3);
+}
+
+void MainWindow::actionExportOBJ()
+{
+	actionExport(FileFormat::OBJ, "OBJ", ".obj", 3);
 }
 
 void MainWindow::actionExportDXF()

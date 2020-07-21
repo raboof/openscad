@@ -482,6 +482,7 @@ int cmdline(const char *deps_output_file, const std::string &filename, const std
 			curFormat == FileFormat::OFF ||
 			curFormat == FileFormat::AMF ||
 			curFormat == FileFormat::_3MF ||
+			curFormat == FileFormat::OBJ ||
 			curFormat == FileFormat::NEFDBG ||
 			curFormat == FileFormat::NEF3 )
 		{
@@ -854,7 +855,7 @@ int main(int argc, char **argv)
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("export-format", po::value<string>(), "overrides format of exported scad file when using option '-o', arg can be any of its supported file extensions\n")
-		("o,o", po::value<vector<string>>(), "output specified file instead of running the GUI, the file extension specifies the type: stl, off, amf, 3mf, csg, dxf, svg, png, echo, ast, term, nef3, nefdbg. (May be used multiple time for different exports)\n")
+		("o,o", po::value<vector<string>>(), "output specified file instead of running the GUI, the file extension specifies the type: stl, off, amf, 3mf, csg, obj, dxf, svg, png, echo, ast, term, nef3, nefdbg. (May be used multiple time for different exports)\n")
 		("D,D", po::value<vector<string>>(), "var=val -pre-define variables")
 		("p,p", po::value<string>(), "customizer parameter file")
 		("P,P", po::value<string>(), "customizer parameter set")

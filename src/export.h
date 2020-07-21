@@ -17,6 +17,7 @@ enum class FileFormat {
 	OFF,
 	AMF,
 	_3MF,
+	OBJ,
 	DXF,
 	SVG,
 	NEFDBG,
@@ -37,6 +38,7 @@ void export_stl(const shared_ptr<const Geometry> &geom, std::ostream &output);
 void export_3mf(const shared_ptr<const Geometry> &geom, std::ostream &output);
 void export_off(const shared_ptr<const Geometry> &geom, std::ostream &output);
 void export_amf(const shared_ptr<const Geometry> &geom, std::ostream &output);
+void export_obj(const shared_ptr<const Geometry> &geom, std::ostream &output);
 void export_dxf(const shared_ptr<const Geometry> &geom, std::ostream &output);
 void export_svg(const shared_ptr<const Geometry> &geom, std::ostream &output);
 void export_nefdbg(const shared_ptr<const Geometry> &geom, std::ostream &output);
@@ -53,6 +55,7 @@ struct ExportFileFormatOptions {
 		{"off", FileFormat::OFF},
 		{"amf", FileFormat::AMF},
 		{"3mf", FileFormat::_3MF},
+		{"obj", FileFormat::OBJ},
 		{"dxf", FileFormat::DXF},
 		{"svg", FileFormat::SVG},
 		{"nefdbg", FileFormat::NEFDBG},
